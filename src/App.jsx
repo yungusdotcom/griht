@@ -243,7 +243,7 @@ function HexMark({size,fg,bg}){
 }
 
 export default function App(){
-  const [view,setView]=useState("landing");
+  const [view,setView]=useState(null);
   const [wks,setWks]=useState([]);
   const [aw,setAw]=useState(null);
   const [dw,setDw]=useState(null);
@@ -267,6 +267,19 @@ export default function App(){
     });
     return ()=>subscription.unsubscribe();
   },[]);
+
+  // Determine initial view once auth is resolved
+  useEffect(()=>{
+    if(authLoad)return;
+    if(view===null){
+      setView(user?"home":"landing");
+    }
+  },[authLoad,user]);
+
+  // When user signs in while on landing, go to home
+  useEffect(()=>{
+    if(user&&view==="landing")setView("home");
+  },[user]);
 
   // Load data when user changes
   useEffect(()=>{
@@ -313,7 +326,7 @@ export default function App(){
   const signIn=async()=>{await supabase.auth.signInWithOAuth({provider:"google",options:{redirectTo:window.location.origin}})};
   const signOut=async()=>{await supabase.auth.signOut();setUser(null);setWks([]);setAw(null);setView("landing")};
 
-  if(authLoad||load)return (<div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"100vh",background:P.bg,fontFamily:P.ft}}><HexMark size={56}/><div style={{fontSize:32,fontWeight:900,color:P.tx,letterSpacing:6,marginTop:16}}>GRI<span style={{color:P.acc2}}>HT</span></div><div style={{fontSize:9,color:P.tx3,letterSpacing:4,fontWeight:700,marginTop:8}}>PUT IN WORK</div></div>);
+  if(authLoad||load||view===null)return (<div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"100vh",background:P.bg,fontFamily:P.ft}}><HexMark size={56}/><div style={{fontSize:32,fontWeight:900,color:P.tx,letterSpacing:6,marginTop:16}}>GRI<span style={{color:P.acc2}}>HT</span></div><div style={{fontSize:9,color:P.tx3,letterSpacing:4,fontWeight:700,marginTop:8}}>PUT IN WORK</div></div>);
   if(view==="landing")return <Landing onLaunch={()=>setView("home")} onSignIn={signIn} user={user}/>;
   return (
     <div style={{fontFamily:P.ft,background:P.bg,color:P.tx,minHeight:"100vh",maxWidth:480,margin:"0 auto"}}>
